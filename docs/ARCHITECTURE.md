@@ -1,403 +1,176 @@
-# 🏗️ Architecture
+# 🏗️ Enterprise Field Operations Platform Architecture
 
 ## Overview
 
-This project follows Google's recommended Android application architecture using **MVVM**, **Clean Architecture**, and the **Repository Pattern**. The design emphasizes separation of concerns, scalability, maintainability, and testability.
-
-### Architecture Goals
-
-- Scalability
-- Maintainability
-- Testability
-- Reusability
-- Offline-first support
-- Performance
-- Security
+The Enterprise Field Operations Platform is designed using a layered architecture that emphasizes scalability, maintainability, and testability. The application follows modern Android development practices by separating presentation, business logic, and data management into independent layers.
 
 ---
 
-# High-Level Architecture
+## Architecture Principles
+
+The project is built around the following principles:
+
+- Clean Architecture
+- MVVM (Model-View-ViewModel)
+- Repository Pattern
+- Single Source of Truth
+- Offline-First Design
+- Dependency Injection
+- Separation of Concerns
+
+---
+
+## High-Level Architecture
 
 ```text
-                 +----------------------+
-                 |      Android UI      |
-                 |   Jetpack Compose    |
-                 +----------+-----------+
-                            |
-                            v
-                 +----------------------+
-                 |      ViewModel       |
-                 +----------+-----------+
-                            |
-                            v
-                 +----------------------+
-                 |      Use Cases       |
-                 +----------+-----------+
-                            |
-                            v
-                 +----------------------+
-                 |      Repository      |
-                 +-----+----------+-----+
-                       |          |
-                       |          |
-                +------+          +------+
-                |                        |
-                v                        v
-         +-------------+          +-------------+
-         | Room DB     |          | REST APIs   |
-         +-------------+          +-------------+
+Jetpack Compose UI
+        │
+        ▼
+ViewModel
+        │
+        ▼
+Use Cases
+        │
+        ▼
+Repository
+      ┌───────┴────────┐
+      ▼                ▼
+ Room Database     REST APIs
+      │
+      ▼
+ WorkManager Sync
 ```
 
 ---
 
-# Clean Architecture Layers
+## Layer Responsibilities
 
-## Presentation Layer
+### Presentation Layer
 
-### Responsibilities
+Responsible for:
 
-- Render UI
-- Handle user interaction
-- Observe UI state
-- Navigate between screens
-
-Components:
-
-- Compose Screens
-- ViewModel
-- UI State
+- Rendering UI
+- Handling user interactions
+- Managing screen state
 - Navigation
 
 ---
 
-## Domain Layer
+### Domain Layer
 
-Contains all business rules.
+Responsible for:
 
-Components:
-
-- Use Cases
-- Repository Interfaces
-- Domain Models
-
-Examples:
-
-- GetWorkOrdersUseCase
-- SyncInspectionUseCase
-- UpdateAssetUseCase
+- Business rules
+- Use cases
+- Repository contracts
 
 ---
 
-## Data Layer
+### Data Layer
 
-Responsible for data retrieval.
+Responsible for:
 
-Components:
-
-- Repository Implementation
-- Retrofit APIs
-- Room Database
-- Local Cache
-- Mappers
+- API communication
+- Local database
+- Data synchronization
+- Repository implementation
 
 ---
 
-# MVVM Flow
+## Data Flow
 
 ```text
 User Action
-
-↓
-
+      │
+      ▼
 Compose Screen
-
-↓
-
+      │
+      ▼
 ViewModel
-
-↓
-
+      │
+      ▼
 Use Case
-
-↓
-
+      │
+      ▼
 Repository
-
-↓
-
-Remote API / Room Database
-
-↓
-
-Repository
-
-↓
-
-ViewModel
-
-↓
-
-Compose UI
+      │
+ ┌────┴─────┐
+ ▼          ▼
+Room     REST API
 ```
 
 ---
 
-# Dependency Injection
+## Offline-First Strategy
 
-Hilt manages dependencies.
+The application prioritizes locally stored data to ensure uninterrupted operation when network connectivity is unavailable.
 
-```text
-Application
+- Read data from Room database.
+- Display cached data immediately.
+- Synchronize updates using WorkManager.
+- Refresh local database after successful API responses.
 
-↓
+---
 
-Hilt Modules
+## Dependency Injection
 
-↓
+The project uses **Hilt** for dependency management.
 
-Repository
+Main injected components include:
 
-↓
+- ViewModels
+- Repositories
+- API Services
+- Database
+- Use Cases
 
-Use Cases
+---
 
-↓
+## Feature Modules
 
-ViewModel
-```
+The application is organized into feature-based modules:
 
-Benefits:
+- Authentication
+- Dashboard
+- Work Orders
+- Asset Management
+- Inspections
+- Customer Visits
+- Notifications
+- User Profile
+- Settings
 
-- Loose coupling
+---
+
+## Design Decisions
+
+### Why Clean Architecture?
+
+- Better maintainability
 - Easier testing
-- Reusable dependencies
+- Independent layers
+- Scalable codebase
+
+### Why MVVM?
+
+- Lifecycle-aware UI
+- Clear separation of concerns
+- Improved state management
+
+### Why Offline-First?
+
+- Reliable user experience
+- Reduced dependency on network availability
+- Automatic background synchronization
 
 ---
 
-# Repository Pattern
-
-Repositories abstract the data source.
-
-Instead of:
-
-```
-ViewModel → Retrofit
-```
-
-Use:
-
-```
-ViewModel
-
-↓
-
-Repository
-
-↓
-
-Remote + Local
-```
-
-Advantages:
-
-- Single Source of Truth
-- Easier testing
-- Offline support
-- Better scalability
-
----
-
-# Offline-First Strategy
-
-When offline:
-
-User
-
-↓
-
-Room Database
-
-↓
-
-UI updates immediately
-
-↓
-
-WorkManager queues changes
-
-↓
-
-Internet returns
-
-↓
-
-Background sync
-
-↓
-
-Server updated
-
----
-
-# Folder Structure
-
-```text
-app/
-
-core/
-
-common/
-
-presentation/
-
-data/
-
-domain/
-
-network/
-
-database/
-
-di/
-
-features/
-
-    home/
-
-    workorders/
-
-    inspections/
-
-    assets/
-
-    profile/
-```
-
----
-
-# Design Principles
-
-The project follows:
-
-- SOLID
-- DRY
-- KISS
-- Separation of Concerns
-- Single Source of Truth
-- Dependency Inversion
-
----
-
-# Error Handling
-
-The application uses a unified Result wrapper.
-
-```text
-Success
-
-Loading
-
-Error
-
-Empty
-```
-
-The UI observes these states and reacts accordingly.
-
----
-
-# Security Considerations
-
-- HTTPS
-- Secure token storage
-- Android Keystore
-- Input validation
-- Session timeout
-
----
-
-# Performance Optimizations
-
-- Lazy loading
-- Compose recomposition optimization
-- Room indexing
-- Paging 3
-- Background synchronization
-- Efficient image loading
-
----
-
-# Scalability
-
-The modular architecture allows new features to be added with minimal impact on existing modules.
-
-Example:
-
-```text
-features/
-
-    dashboard/
-
-    inspection/
-
-    asset/
-
-    reports/
-
-    analytics/
-```
-
----
-
-# Architecture Decision Records (ADR)
-
-### ADR-001
-
-**Decision:** Use MVVM.
-
-**Reason:** Clear separation between UI and business logic.
-
----
-
-### ADR-002
-
-**Decision:** Use Clean Architecture.
-
-**Reason:** Improves maintainability and testability.
-
----
-
-### ADR-003
-
-**Decision:** Use Hilt.
-
-**Reason:** Standard dependency injection solution for Android.
-
----
-
-### ADR-004
-
-**Decision:** Use Room as the local database.
-
-**Reason:** Supports offline-first architecture and integrates well with Jetpack.
-
----
-
-# Future Improvements
-
-- Multi-module feature isolation
-- Dynamic Feature Modules
-- GraphQL support
-- KMP-ready domain layer
-- AI-assisted recommendations
-- Enhanced analytics
-
----
-
-# References
-
-- Android Developers Architecture Guide
-- Jetpack Compose Documentation
-- Kotlin Coroutines Documentation
-- Hilt Documentation
-- Room Persistence Library
+## Scalability
+
+The architecture supports future enhancements such as:
+
+- Additional feature modules
+- AI-assisted workflows
+- Multi-module project structure
+- Wear OS integration
+- Advanced analytics
